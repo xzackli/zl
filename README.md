@@ -1,2 +1,2 @@
 # zl
-personal todolist tracking
+simple Eisenhower method todo tracking on the windows wallpaper
