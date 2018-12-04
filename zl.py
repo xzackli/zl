@@ -12,7 +12,7 @@ def setup():
     boxwidth = 1400
     boxheight = 800
     origin_x = 3000
-    origin_y = 500
+    origin_y = 250
     margin = 50
 
     drive = "c:\\"
