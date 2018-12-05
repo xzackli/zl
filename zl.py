@@ -99,7 +99,23 @@ def update():
     img.save('sample-out.jpg')
     set_background('sample-out.jpg')
 
+def flatten(list_of_lists):
+    return [item for sublist in list_of_lists for item in sublist]
 
+def complete(completed_number):
+    with open("data.yaml", 'r') as stream:
+        current = yaml.load(stream)
+
+    categories = ["urgent + critical", "not urgent + critical",
+        "urgent + not critical", "not urgent + not critical"]
+    inds = flatten([ list(range(len(current[cat]))) for cat in categories])
+    cats = flatten([ [cat] * len(current[cat]) for cat in categories ])
+
+    i = completed_number - 1
+    del current[cats[i]][inds[i]]
+
+    with io.open('data.yaml', 'w', encoding='utf8') as outfile:
+        yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
 
 # handle console input
 import sys
@@ -124,6 +140,10 @@ if len(sys.argv) > 1:
 
         with io.open('data.yaml', 'w', encoding='utf8') as outfile:
             yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
-
+    elif sys.argv[1] == "complete":
+        if len(sys.argv) > 2:
+            complete(int(sys.argv[2]))
+        else:
+            print("Must select a task to complete.")
     else:
         print("Command not recognized.")
