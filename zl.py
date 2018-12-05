@@ -8,9 +8,15 @@ def number(list_of_things, start_ind=1):
     return [f"{start_ind+i}. {item_in_list}" for i, item_in_list in enumerate(list_of_things)]
 
 
+drive = "c:\\"
+folder = "Users\\xzack\\Projects\\zl"
+image = "data.yaml"
+data_path = os.path.join(drive, folder, image)
+
+
 def setup():
     boxwidth = 1400
-    boxheight = 800
+    boxheight = 1000
     origin_x = 3000
     origin_y = 250
     margin = 50
@@ -71,7 +77,7 @@ def update():
     topleft, topright, bottomleft, bottomright = pickled["textboxes"]
 
 
-    with open("data.yaml", 'r') as stream:
+    with open(data_path, 'r') as stream:
         current = yaml.load(stream)
 
     start_ind = 1
@@ -96,54 +102,116 @@ def update():
     start_ind += len(inp_text)
     img = bottomright.draw(img, text=boxtext, font=font)
 
-    img.save('sample-out.jpg')
-    set_background('sample-out.jpg')
+    drive = "c:\\"
+    folder = "Users\\xzack\\Projects\\zl\\wallpapers"
+    image = "sample-out.jpg"
+    image_path = os.path.join(drive, folder, image)
+    img.save(image_path)
+    set_background(image_path)
 
 def flatten(list_of_lists):
     return [item for sublist in list_of_lists for item in sublist]
 
-def complete(completed_number):
-    with open("data.yaml", 'r') as stream:
-        current = yaml.load(stream)
-
+def get_cat_and_subind(current, num):
     categories = ["urgent + critical", "not urgent + critical",
         "urgent + not critical", "not urgent + not critical"]
     inds = flatten([ list(range(len(current[cat]))) for cat in categories])
     cats = flatten([ [cat] * len(current[cat]) for cat in categories ])
 
-    i = completed_number - 1
-    del current[cats[i]][inds[i]]
+    i = num - 1
+    return cats[i], inds[i]
 
-    with io.open('data.yaml', 'w', encoding='utf8') as outfile:
+def add(inp, inp_cat=""):
+
+    with open(data_path, 'r') as stream:
+        current = yaml.load(stream)
+
+    current[get_category(inp_cat)] += [inp]
+
+    with io.open(data_path, 'w', encoding='utf8') as outfile:
         yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+
+def complete(completed_number):
+
+    with open(data_path, 'r') as stream:
+        current = yaml.load(stream)
+
+    cat, ind = get_cat_and_subind(current, completed_number)
+    del current[cat][ind]
+
+    with io.open(data_path, 'w', encoding='utf8') as outfile:
+        yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+
+
+def get_category(cat_str):
+    category1, category2 = "not urgent", "not critical"
+    if 'u' in cat_str:
+        category1 = "urgent"
+    if 'c' in cat_str:
+        category2 = "critical"
+    return category1 + " + " + category2
+
+
+def move(task_number, new_category):
+
+    with open(data_path, 'r') as stream:
+        current = yaml.load(stream)
+
+    cat, ind = get_cat_and_subind(current, task_number)
+    copy_str = current[cat][ind][:]
+    del current[cat][ind]
+    current[get_category(new_category)] += [copy_str]
+
+    with io.open(data_path, 'w', encoding='utf8') as outfile:
+        yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+
+
+def edit(task_number, new_text):
+
+    with open(data_path, 'r') as stream:
+        current = yaml.load(stream)
+
+    cat, ind = get_cat_and_subind(current, task_number)
+    current[cat][ind] = new_text
+
+    with io.open(data_path, 'w', encoding='utf8') as outfile:
+        yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+
 
 # handle console input
 import sys
 
 if len(sys.argv) > 1:
     if sys.argv[1] == "update":
-        update()
+        # update()
+        pass
     elif sys.argv[1] == "setup":
         setup()
     elif sys.argv[1] == "add":
-        with open("data.yaml", 'r') as stream:
-            current = yaml.load(stream)
-
-        if len(sys.argv) > 2:
-            category1, category2 = "not urgent", "not critical"
-            if len(sys.argv) > 3:
-                if 'u' in sys.argv[3]:
-                    category1 = "urgent"
-                if 'c' in sys.argv[3]:
-                    category2 = "critical"
-            current[category1 + " + " + category2] += [sys.argv[2]]
-
-        with io.open('data.yaml', 'w', encoding='utf8') as outfile:
-            yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+        if len(sys.argv) > 3:
+            add(sys.argv[2], sys.argv[3])
+        elif len(sys.argv) > 2:
+            add(sys.argv[2], "")
+        else:
+            print("bad input")
     elif sys.argv[1] == "complete":
         if len(sys.argv) > 2:
             complete(int(sys.argv[2]))
         else:
             print("Must select a task to complete.")
+    elif sys.argv[1] == "move":
+        if len(sys.argv) > 3:
+            move(int(sys.argv[2]), sys.argv[3] )
+        elif len(sys.argv) > 2:
+            move(int(sys.argv[2]), "" )
+        else:
+            print("usage: zl move <task> <category>")
+    elif sys.argv[1] == "edit":
+        if len(sys.argv) == 4:
+            edit(int(sys.argv[2]), sys.argv[3])
+        else:
+            print("usage: zl edit <task> <new text>")
     else:
         print("Command not recognized.")
+
+update()
