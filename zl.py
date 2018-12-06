@@ -13,6 +13,24 @@ folder = "Users\\xzack\\Projects\\zl"
 image = "data.yaml"
 data_path = os.path.join(drive, folder, image)
 
+import logging
+import sys
+
+def setup_custom_logger(name):
+    formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
+                                  datefmt='%Y-%m-%d %H:%M:%S')
+    handler = logging.FileHandler(os.path.join(drive, folder, "log.txt"), mode='a')
+    handler.setFormatter(formatter)
+    screen_handler = logging.StreamHandler(stream=sys.stdout)
+    screen_handler.setFormatter(formatter)
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
+    # logger.addHandler(screen_handler)
+    return logger
+
+logger = setup_custom_logger('zl')
+
 
 def setup():
     boxwidth = 1400
@@ -131,16 +149,21 @@ def add(inp, inp_cat=""):
     with io.open(data_path, 'w', encoding='utf8') as outfile:
         yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
 
+    logger.info(f'added: {get_category(inp_cat)}, {inp}')
+
 def complete(completed_number):
 
     with open(data_path, 'r') as stream:
         current = yaml.load(stream)
 
     cat, ind = get_cat_and_subind(current, completed_number)
+
+    logger.info(f'completed: {cat}, {current[cat][ind]}')
     del current[cat][ind]
 
     with io.open(data_path, 'w', encoding='utf8') as outfile:
         yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+
 
 
 def get_category(cat_str):

@@ -5,6 +5,7 @@ __pycache__/
 *.jpg
 data.yaml
 save.p
+log.txt
 
 # C extensions
 *.so
