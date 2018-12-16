@@ -3,23 +3,21 @@ from wallpaper_tools import *
 import yaml
 import io
 import pickle
+import sys, os
+import logging
 
 def number(list_of_things, start_ind=1):
     return [f"{start_ind+i}. {item_in_list}" for i, item_in_list in enumerate(list_of_things)]
 
 
-drive = "c:\\"
-folder = "Users\\xzack\\Projects\\zl"
-image = "data.yaml"
-data_path = os.path.join(drive, folder, image)
+abs_path = os.path.abspath(os.path.dirname(sys.argv[0]))
+data_path = abs_path + "\\data.yaml"
 
-import logging
-import sys
 
 def setup_custom_logger(name):
     formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                                   datefmt='%Y-%m-%d %H:%M:%S')
-    handler = logging.FileHandler(os.path.join(drive, folder, "log.txt"), mode='a')
+    handler = logging.FileHandler(abs_path + "\\log.txt", mode='a')
     handler.setFormatter(formatter)
     screen_handler = logging.StreamHandler(stream=sys.stdout)
     screen_handler.setFormatter(formatter)
@@ -39,10 +37,8 @@ def setup():
     origin_y = 250
     margin = 50
 
-    drive = "c:\\"
-    folder = "Users\\xzack\\Projects\\zl\\wallpapers"
     image = "joanna-kosinska-289519-unsplash.jpg"
-    image_path = os.path.join(drive, folder, image)
+    image_path = abs_path + "\\wallpapers\\" + image
     img = Image.open(image_path)
 
 
@@ -60,11 +56,9 @@ def setup():
                        fontsize=72)
 
 
-    drive="c:\\"
-    folder="Users\\xzack\\Projects\\zl"
     fontfile = "Inconsolata.otf"
     fontsize = 72
-    fontpath = os.path.join(drive, folder, fontfile)
+    fontpath = abs_path + "\\" + fontfile
     font = ImageFont.truetype(fontpath, fontsize)
 
     img = topleft.draw(img, text="", font=font,
@@ -74,23 +68,19 @@ def setup():
     img = bottomright.draw_bg(img)
 
     import pickle
-    drive = "c:\\"
-    folder = "Users\\xzack\\Projects\\zl"
     pickled = { "img": img,
         "textboxes": (topleft, topright, bottomleft, bottomright) }
-    pickle.dump( pickled, open( os.path.join(drive, folder, "save.p"), "wb" ) )
+    pickle.dump( pickled, open( abs_path + "\\save.p", "wb" ) )
 
 
 def update():
 
-    drive="c:\\"
-    folder="Users\\xzack\\Projects\\zl"
     fontfile = "Inconsolata.otf"
     fontsize = 72
-    fontpath = os.path.join(drive, folder, fontfile)
+    fontpath = abs_path + "\\" + fontfile
     font = ImageFont.truetype(fontpath, fontsize)
 
-    pickled = pickle.load( open(os.path.join(drive, folder, "save.p" ),"rb") )
+    pickled = pickle.load( open(abs_path + "\\save.p","rb") )
     img = pickled["img"]
     topleft, topright, bottomleft, bottomright = pickled["textboxes"]
 
@@ -120,12 +110,11 @@ def update():
     start_ind += len(inp_text)
     img = bottomright.draw(img, text=boxtext, font=font)
 
-    drive = "c:\\"
-    folder = "Users\\xzack\\Projects\\zl\\wallpapers"
     image = "sample-out.jpg"
-    image_path = os.path.join(drive, folder, image)
+    image_path = abs_path + "\\wallpapers\\" + image
     img.save(image_path)
     set_background(image_path)
+
 
 def flatten(list_of_lists):
     return [item for sublist in list_of_lists for item in sublist]
@@ -182,6 +171,9 @@ def move(task_number, new_category):
 
     cat, ind = get_cat_and_subind(current, task_number)
     copy_str = current[cat][ind][:]
+
+    logger.info(f'moved: {copy_str}, {cat} -> {get_category(new_category)}')
+
     del current[cat][ind]
     current[get_category(new_category)] += [copy_str]
 
@@ -195,10 +187,13 @@ def edit(task_number, new_text):
         current = yaml.load(stream)
 
     cat, ind = get_cat_and_subind(current, task_number)
+    logger.info(f'edited: {current[cat][ind]} -> {new_text}')
     current[cat][ind] = new_text
 
     with io.open(data_path, 'w', encoding='utf8') as outfile:
         yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+
+
 
 
 # handle console input
