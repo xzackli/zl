@@ -1,9 +1,10 @@
-OS: LINUX
+OS: WINDOWS
+machine: KLEIN
 wallpaper: joanna-kosinska-289519-unsplash.jpg
-boxwidth: 1000
-boxheight: 600
-origin_x: 3800
-origin_y: 600
+boxwidth: 1400
+boxheight: 1000
+origin_x: 3000
+origin_y: 250
 margin: 50
-fontsize: 48
-titlesize: 48
+fontsize: 72
+titlesize: 72
