@@ -13,7 +13,7 @@ def number(list_of_things, start_ind=1):
     return [f"{start_ind+i}. {item_in_list}" for i, item_in_list in enumerate(list_of_things)]
 
 
-abs_path = Path('.')
+abs_path = Path(__file__).resolve().parent
 data_path = abs_path / "data.yaml"
 
 home = Path.home()
