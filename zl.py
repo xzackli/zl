@@ -3,21 +3,29 @@ from wallpaper_tools import *
 import yaml
 import io
 import pickle
-import sys, os
+import sys
+import os
 import logging
+from pathlib import Path
+
 
 def number(list_of_things, start_ind=1):
     return [f"{start_ind+i}. {item_in_list}" for i, item_in_list in enumerate(list_of_things)]
 
 
-abs_path = os.path.abspath(os.path.dirname(sys.argv[0]))
-data_path = abs_path + "\\data.yaml"
+abs_path = Path('.')
+data_path = abs_path / "data.yaml"
+
+home = Path.home()
+config_path = home / ".config" / "zl.conf"
+with open(str(config_path), 'r') as stream:
+    config = yaml.load(stream)
 
 
 def setup_custom_logger(name):
     formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                                   datefmt='%Y-%m-%d %H:%M:%S')
-    handler = logging.FileHandler(abs_path + "\\log.txt", mode='a')
+    handler = logging.FileHandler( str(abs_path / "log.txt"), mode='a')
     handler.setFormatter(formatter)
     screen_handler = logging.StreamHandler(stream=sys.stdout)
     screen_handler.setFormatter(formatter)
@@ -27,39 +35,40 @@ def setup_custom_logger(name):
     # logger.addHandler(screen_handler)
     return logger
 
+
 logger = setup_custom_logger('zl')
 
 
 def setup():
-    boxwidth = 1400
-    boxheight = 1000
-    origin_x = 3000
-    origin_y = 250
-    margin = 50
+    boxwidth = config["boxwidth"]
+    boxheight = config["boxheight"]
+    origin_x = config["origin_x"]
+    origin_y = config["origin_y"]
+    margin = config["margin"]
 
-    image = "joanna-kosinska-289519-unsplash.jpg"
-    image_path = abs_path + "\\wallpapers\\" + image
-    img = Image.open(image_path)
+    image = config["wallpaper"]
+    image_path = abs_path / "wallpapers" / image
+    img = Image.open(str(image_path))
 
 
     topleft = Textbox(x=origin_x, y=origin_y,
                       w=boxwidth, h=boxheight,
-                      fontsize=72)
+                      fontsize=config["fontsize"])
     topright = Textbox(x=origin_x+boxwidth+margin, y=origin_y,
                        w=boxwidth, h=boxheight,
-                       fontsize=72)
+                       fontsize=config["fontsize"])
     bottomleft = Textbox(x=origin_x, y=origin_y+boxheight+margin,
                        w=boxwidth, h=boxheight,
-                       fontsize=72)
+                       fontsize=config["fontsize"])
     bottomright = Textbox(x=origin_x+boxwidth+margin, y=origin_y+boxheight+margin,
                        w=boxwidth, h=boxheight,
-                       fontsize=72)
+                       fontsize=config["fontsize"])
 
 
     fontfile = "Inconsolata.otf"
-    fontsize = 72
-    fontpath = abs_path + "\\" + fontfile
-    font = ImageFont.truetype(fontpath, fontsize)
+    fontsize = config["titlesize"]
+    fontpath = abs_path / fontfile
+    font = ImageFont.truetype(str(fontpath), fontsize)
 
     img = topleft.draw(img, text="", font=font,
                       toptext="urgent", lefttext="critical", bg=True)
@@ -70,17 +79,17 @@ def setup():
     import pickle
     pickled = { "img": img,
         "textboxes": (topleft, topright, bottomleft, bottomright) }
-    pickle.dump( pickled, open( abs_path + "\\save.p", "wb" ) )
+    pickle.dump( pickled, open( str(abs_path / "save.p"), "wb" ) )
 
 
 def update():
 
     fontfile = "Inconsolata.otf"
-    fontsize = 72
-    fontpath = abs_path + "\\" + fontfile
-    font = ImageFont.truetype(fontpath, fontsize)
+    fontsize = config["fontsize"]
+    fontpath = abs_path / fontfile
+    font = ImageFont.truetype(str(fontpath), fontsize)
 
-    pickled = pickle.load( open(abs_path + "\\save.p","rb") )
+    pickled = pickle.load( open(str(abs_path / "save.p"),"rb") )
     img = pickled["img"]
     topleft, topright, bottomleft, bottomright = pickled["textboxes"]
 
@@ -111,9 +120,13 @@ def update():
     img = bottomright.draw(img, text=boxtext, font=font)
 
     image = "sample-out.jpg"
-    image_path = abs_path + "\\wallpapers\\" + image
-    img.save(image_path)
-    set_background(image_path)
+    image_path = abs_path / "wallpapers" / image
+    img.save(str(image_path))
+
+    if config['OS'] == 'LINUX':
+        set_background_linux(image_path)
+    else:
+        set_background(image_path)
 
 
 def flatten(list_of_lists):

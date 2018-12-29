@@ -1,6 +1,4 @@
 import os
-import ctypes
-from ctypes import wintypes
 
 from PIL import Image
 from PIL import ImageFont
@@ -10,6 +8,8 @@ import numpy as np
 
 
 def set_background(image, folder="Users\\xzack\\Projects\\zl"):
+    import ctypes
+    from ctypes import wintypes
     drive = "c:\\"
     image_path = os.path.join(drive, folder, image)
 
@@ -25,6 +25,11 @@ def set_background(image, folder="Users\\xzack\\Projects\\zl"):
         SPI_SETDESKWALLPAPER, 0, image_path,
         SPIF_UPDATEINIFILE | SPIF_SENDWININICHANGE)
 
+
+def set_background_linux(image_path):
+    #  nitrogen --set-zoom-fill ~/Dropbox/zl/wallpapers/joanna-kosinska-289519-unsplash.jpg --head=0
+    import subprocess
+    subprocess.call(["nitrogen", "--set-zoom-fill", image_path, "--head=0"])
 
 class Textbox:
     """
