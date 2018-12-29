@@ -14,18 +14,22 @@ def number(list_of_things, start_ind=1):
 
 
 abs_path = Path(__file__).resolve().parent
-data_path = abs_path / "data.yaml"
+data_path = abs_path / "data" / "data.yaml"
+log_path = abs_path / "data" / "log.txt"
 
 home = Path.home()
 config_path = home / ".config" / "zl.conf"
 with open(str(config_path), 'r') as stream:
     config = yaml.load(stream)
 
+save_path = abs_path / "data" / f"save_{config['machine']}.p"
+image_path = abs_path / "data" / f"generated_{config['machine']}.jpg"
+
 
 def setup_custom_logger(name):
     formatter = logging.Formatter(fmt='%(asctime)s %(levelname)-8s %(message)s',
                                   datefmt='%Y-%m-%d %H:%M:%S')
-    handler = logging.FileHandler( str(abs_path / "log.txt"), mode='a')
+    handler = logging.FileHandler( str(log_path), mode='a')
     handler.setFormatter(formatter)
     screen_handler = logging.StreamHandler(stream=sys.stdout)
     screen_handler.setFormatter(formatter)
@@ -79,7 +83,7 @@ def setup():
     import pickle
     pickled = { "img": img,
         "textboxes": (topleft, topright, bottomleft, bottomright) }
-    pickle.dump( pickled, open( str(abs_path / "save.p"), "wb" ) )
+    pickle.dump( pickled, open( str(save_path), "wb" ) )
 
 
 def update():
@@ -89,12 +93,12 @@ def update():
     fontpath = abs_path / fontfile
     font = ImageFont.truetype(str(fontpath), fontsize)
 
-    pickled = pickle.load( open(str(abs_path / "save.p"),"rb") )
+    pickled = pickle.load( open(str(save_path),"rb") )
     img = pickled["img"]
     topleft, topright, bottomleft, bottomright = pickled["textboxes"]
 
 
-    with open(data_path, 'r') as stream:
+    with open(str(data_path), 'r') as stream:
         current = yaml.load(stream)
 
     start_ind = 1
@@ -119,8 +123,6 @@ def update():
     start_ind += len(inp_text)
     img = bottomright.draw(img, text=boxtext, font=font)
 
-    image = "sample-out.jpg"
-    image_path = abs_path / "wallpapers" / image
     img.save(str(image_path))
 
     if config['OS'] == 'LINUX':
