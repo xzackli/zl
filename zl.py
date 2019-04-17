@@ -20,7 +20,7 @@ log_path = abs_path / "data" / "log.txt"
 home = Path.home()
 config_path = home / ".config" / "zl.conf"
 with open(str(config_path), 'r') as stream:
-    config = yaml.load(stream)
+    config = yaml.safe_load(stream)
 
 save_path = abs_path / "data" / f"save_{config['machine']}.p"
 image_path = abs_path / "data" / f"generated_{config['machine']}.jpg"
@@ -99,7 +99,7 @@ def update():
 
 
     with open(str(data_path), 'r') as stream:
-        current = yaml.load(stream)
+        current = yaml.safe_load(stream)
 
     start_ind = 1
 
@@ -146,7 +146,7 @@ def get_cat_and_subind(current, num):
 def add(inp, inp_cat=""):
 
     with open(data_path, 'r') as stream:
-        current = yaml.load(stream)
+        current = yaml.safe_load(stream)
 
     current[get_category(inp_cat)] += [inp]
 
@@ -158,11 +158,25 @@ def add(inp, inp_cat=""):
 def complete(completed_number):
 
     with open(data_path, 'r') as stream:
-        current = yaml.load(stream)
+        current = yaml.safe_load(stream)
 
     cat, ind = get_cat_and_subind(current, completed_number)
 
     logger.info(f'completed: {cat}, {current[cat][ind]}')
+    del current[cat][ind]
+
+    with io.open(data_path, 'w', encoding='utf8') as outfile:
+        yaml.dump(current, outfile, default_flow_style=False, allow_unicode=True)
+
+
+def delete(completed_number):
+
+    with open(data_path, 'r') as stream:
+        current = yaml.safe_load(stream)
+
+    cat, ind = get_cat_and_subind(current, completed_number)
+
+    logger.info(f'deleted: {cat}, {current[cat][ind]}')
     del current[cat][ind]
 
     with io.open(data_path, 'w', encoding='utf8') as outfile:
@@ -182,7 +196,7 @@ def get_category(cat_str):
 def move(task_number, new_category):
 
     with open(data_path, 'r') as stream:
-        current = yaml.load(stream)
+        current = yaml.safe_load(stream)
 
     cat, ind = get_cat_and_subind(current, task_number)
     copy_str = current[cat][ind][:]
@@ -199,7 +213,7 @@ def move(task_number, new_category):
 def edit(task_number, new_text):
 
     with open(data_path, 'r') as stream:
-        current = yaml.load(stream)
+        current = yaml.safe_load(stream)
 
     cat, ind = get_cat_and_subind(current, task_number)
     logger.info(f'edited: {current[cat][ind]} -> {new_text}')
@@ -230,6 +244,11 @@ if len(sys.argv) > 1:
     elif sys.argv[1] == "complete":
         if len(sys.argv) > 2:
             complete(int(sys.argv[2]))
+        else:
+            print("Must select a task to complete.")
+    elif sys.argv[1] == "delete":
+        if len(sys.argv) > 2:
+            delete(int(sys.argv[2]))
         else:
             print("Must select a task to complete.")
     elif sys.argv[1] == "move":
